@@ -308,10 +308,15 @@ int main(void)
 }
 ~~~
 
-Yes, this program works and doesn't have any *undefined behavior*, but I guess
-you don't like very much that nothing at all happens when you just press
+Yes, this program works and doesn't have any *undefined behavior*\*), but I
+guess you don't like very much that nothing at all happens when you just press
 enter, because `scanf()` is skipping it and continues to wait for input that
 can be matched.
+
+<span style="font-size: 70%;">\*) actually, this isn't even entirely true.
+This program *still* has *undefined behavior* for empty input. You could force
+this on a Linux console hitting `Ctrl+D` for example. So, it's again an
+example for *code you should not write*.</span>
 
 ## 3. Ok, I just want to read *some input* from the user
 
