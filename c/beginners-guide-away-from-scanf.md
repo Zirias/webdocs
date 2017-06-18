@@ -479,6 +479,8 @@ int main(void)
 
         // have some input, convert it to integer:
         char *endptr;
+
+	errno = 0; // reset error number
         a = strtol(buf, &endptr, 10);
         if (errno == ERANGE)
         {
@@ -542,15 +544,23 @@ That being said, here's an example how to read a number with retries using
 int main(void)
 {
     int a;
+    int rc;
     printf("enter a number: ");
-    while (scanf("%d", &a) != 1)
+    while ((rc = scanf("%d", &a)) == 0)  // Neither success (1) nor EOF
     {
         // clear what is left, the * means only match and discard:
         scanf("%*[^\n]");
         // input was not a number, ask again:
         printf("enter a number: ");
     }
-    printf("You entered %d.\n", a);
+    if (rc == EOF)
+    {
+        printf("Nothing more to read - and no number found\n");
+    }
+    else
+    {
+        printf("You entered %d.\n", a);
+    }
 }
 ~~~
 
@@ -576,4 +586,9 @@ int main(void)
     }
 }
 ~~~
+
+Note that this final example of course leaves input unread, even from the same
+line, if there were more than 39 characters until the newline. If this is a
+concern, you'd have to find another way -- or just use `fgets()`, making the
+check easier, because it gives you the newline if there was one.
 
