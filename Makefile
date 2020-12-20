@@ -1,4 +1,4 @@
-DOCS:=c/beginners-guide-away-from-scanf
+DOCS:=c/beginners-guide-away-from-scanf freebsd/advocacy
 
 PANDOC?=pandoc
 OUTDIR?=html
