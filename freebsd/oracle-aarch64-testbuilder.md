@@ -310,3 +310,74 @@ $ pkg clean
 # 5. Test some of your ports
 
 Yes, please do so ;)
+
+# Appendix: Upgrade your test builder
+
+Of course, if you're reading this howto, I'm sure you already know how to
+upgrade your machine. Still, I'll document the procedure I would recommend
+here. We'll start with upgrading the `src` tree and building again:
+
+~~~{.sh}
+$ cd /usr/src
+$ git pull
+$ kldload filemon # only if you didn't add it to kld_list
+$ make -j4 buildworld buildkernel
+$ bectl create new
+$ bectl mount new /mnt
+$ make DESTDIR=/mnt BATCH_DELETE_OLD_FILES=yes installworld installkernel delete-old
+$ etcupdate -D /mnt
+$ etcupdate resolve -D /mnt # only in case of conflicts
+$ bectl umount new
+$ bectl activate -t new
+$ shutdown -r now
+~~~
+
+Now, let's upgrade our `-CURRENT` poudriere jail as well:
+
+~~~{.sh}
+$ cd /usr/src
+$ zfs rollback zroot/poudriere/jails/14@clean
+$ zfs destroy zroot/poudriere/jails/14@clean
+$ make DESTDIR=/usr/local/poudriere/jails/14 BATCH_DELETE_OLD_FILES=yes installworld delete-old delete-old-libs
+$ etcupdate -D /usr/local/poudriere/jails/14
+$ zfs snapshot zroot/poudriere/jails/14@clean
+$ touch /usr/local/poudriere/jails/14/.poudriere-snap-clean
+$ date +%s >/usr/local/etc/poudriere.d/jails/14/timestamp
+~~~
+
+We probably also want to upgrade ports here ...
+
+~~~{.sh}
+$ cd /usr/local/poudriere/ports/default
+# This assumes we're on the main branch. Otherwise, you will hopefully know
+# how to upgrade ...
+$ git pull
+~~~
+
+And then, update our local package repository and upgrade packages from there.
+
+~~~{.sh}
+$ poudriere bulk -j 14 -p default -c -f ~/ports.txt
+$ pkg upgrade -f
+$ pkg autoremove
+$ pkg clean
+~~~
+
+If everything went fine so far, it's time to make the new boot environment the
+default. And if something went wrong, well just reboot. In that case, you will
+have to re-install your poudriere jail as it's outside the boot environment.
+
+But let's assume everything went fine and finish this:
+
+~~~{.sh}
+$ bectl rename default old
+$ bectl rename new default
+$ bectl activate default
+$ shutdown -r now
+$ cd /usr/src
+$ make BATCH_DELETE_OLD_FILES=yes delete-old-libs
+~~~
+
+Now, you could remove the `old` boot environment with `bectl destroy old`
+whenever you feel comfortable to do so.
+
