@@ -1,5 +1,6 @@
 DOCS:=	c/beginners-guide-away-from-scanf \
 	freebsd/advocacy \
+	freebsd/nfs-jail-kerberos-samba \
 	freebsd/oracle-aarch64-testbuilder
 
 PANDOC?=pandoc
